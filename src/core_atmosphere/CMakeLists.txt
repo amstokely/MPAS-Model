@@ -1,7 +1,7 @@
 
 ## Source files
 # physics/
-set(_atm_core_physics_srcs
+set(ATMOSPHERE_CORE_PHYSICS_SOURCES
         ccpp_kinds.F
         mpas_atmphys_camrad_init.F
         mpas_atmphys_constants.F
@@ -13,7 +13,6 @@ set(_atm_core_physics_srcs
         mpas_atmphys_finalize.F
         mpas_atmphys_functions.F
         mpas_atmphys_init_microphysics.F
-        #        mpas_atmphys_initialize_real.F
         mpas_atmphys_interface.F
         mpas_atmphys_landuse.F
         mpas_atmphys_lsm_noahinit.F
@@ -39,11 +38,11 @@ set(_atm_core_physics_srcs
         mpas_atmphys_todynamics.F
         mpas_atmphys_vars.F
 )
-list(TRANSFORM _atm_core_physics_srcs PREPEND physics/)
+list(TRANSFORM ATMOSPHERE_CORE_PHYSICS_SOURCES PREPEND physics/)
 
 ## Unused
 # physics/physics_wrf/
-set(_atm_core_physics_wrf_srcs
+set(ATMOSPHERE_CORE_PHYSICS_WRF_SOURCES
         libmassv.F
         module_bep_bem_helper.F
         module_bl_gwdo.F
@@ -85,9 +84,9 @@ set(_atm_core_physics_wrf_srcs
         sf_mynn_pre.F
 )
 
-list(TRANSFORM _atm_core_physics_wrf_srcs PREPEND physics/physics_wrf/)
+list(TRANSFORM ATMOSPHERE_CORE_PHYSICS_WRF_SOURCES PREPEND physics/physics_wrf/)
 
-set(_atm_core_physics_mmm_srcs
+set(ATMOSPHERE_CORE_PHYSICS_MMM_SOURCES
         bl_gwdo.F
         bl_ysu.F
         cu_ntiedtke.F
@@ -102,10 +101,10 @@ set(_atm_core_physics_mmm_srcs
         sf_sfclayrev.F
 )
 
-list(TRANSFORM _atm_core_physics_mmm_srcs PREPEND physics/physics_mmm/)
+list(TRANSFORM ATMOSPHERE_CORE_PHYSICS_MMM_SOURCES PREPEND physics/physics_mmm/)
 
 # diagnostics/
-set(_atm_core_diagnostics_srcs
+set(ATMOSPHERE_CORE_DIAGNOSTIC_SOURCES
         mpas_atm_diagnostic_template.F
         mpas_atm_diagnostics_manager.F
         mpas_atm_diagnostics_utils.F
@@ -116,23 +115,23 @@ set(_atm_core_diagnostics_srcs
         mpas_soundings.F
 )
 
-list(TRANSFORM _atm_core_diagnostics_srcs PREPEND diagnostics/)
+list(TRANSFORM ATMOSPHERE_CORE_DIAGNOSTIC_SOURCES PREPEND diagnostics/)
 
 # dynamics/
-set(_atm_core_dynamics_srcs
+set(ATMOSPHERE_CORE_DYNAMICS_SOURCES
         mpas_atm_boundaries.F
         mpas_atm_iau.F
         mpas_atm_time_integration.F)
-list(TRANSFORM _atm_core_dynamics_srcs PREPEND dynamics/)
+list(TRANSFORM ATMOSPHERE_CORE_DYNAMICS_SOURCES PREPEND dynamics/)
 
 # utils/
-set(_atm_core_utils_srcs
+set(ATMOSPHERE_CORE_UTILS_SOURCES
         atmphys_build_tables_thompson.F
         build_tables.F)
-list(TRANSFORM _atm_core_utils_srcs PREPEND utils/)
+list(TRANSFORM ATMOSPHERE_CORE_UTILS_SOURCES PREPEND utils/)
 
 # core_atosphere
-set(_atm_core_srcs
+set(ATMOSPHERE_CORE_SOURCES
         mpas_atm_dimensions.F
         mpas_atm_threading.F
         mpas_atm_core.F
@@ -141,7 +140,7 @@ set(_atm_core_srcs
 )
 
 ## Generated includes
-set(atm_core_inc
+set(ATMOSPHERE_CORE_INCLUDES
         block_dimension_routines.inc
         core_variables.inc
         define_packages.inc
@@ -152,53 +151,28 @@ set(atm_core_inc
         structs_and_variables.inc)
 
 
-add_library(core_atmosphere ${_atm_core_srcs}
-        ${_atm_core_physics_srcs}
-        ${_atm_core_physics_mmm_srcs}
-        ${_atm_core_physics_wrf_srcs}
-        ${_atm_core_diagnostics_srcs}
-        ${_atm_core_dynamics_srcs})
+add_library(core_atmosphere ${ATMOSPHERE_CORE_SOURCES}
+        ${ATMOSPHERE_CORE_PHYSICS_SOURCES}
+        ${ATMOSPHERE_CORE_PHYSICS_MMM_SOURCES}
+        ${ATMOSPHERE_CORE_PHYSICS_WRF_SOURCES}
+        ${ATMOSPHERE_CORE_DIAGNOSTIC_SOURCES}
+        ${ATMOSPHERE_CORE_DYNAMICS_SOURCES})
 
+set(CORE_ATMOSPHERE_COMPILE_DEFINITIONS
+        mpas=1
+        MPAS_NATIVE_TIMERS
+)
 if (${DO_PHYSICS})
-    target_compile_definitions(core_atmosphere PRIVATE DO_PHYSICS)
+    list(APPEND CORE_ATMOSPHERE_COMPILE_DEFINITIONS DO_PHYSICS)
 endif ()
-if (MPAS_DOUBLE_PRECISION)
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fdefault-real-8 -fdefault-double-8")
-else ()
-    target_compile_definitions(core_atmosphere PRIVATE SINGLE_PRECISION)
-endif ()
-if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
-    target_compile_definitions(core_atmosphere PRIVATE MPAS_DEBUG)
-endif ()
-if (${PIO_FOUND})
-    FILE(STRINGS ${PIO_PREFIX}/lib/libpio.settings PIO_SETTINGS)
-    foreach (setting ${PIO_SETTINGS})
-        string(FIND ${setting} "PIO Version" found)
-        if (${found} GREATER -1)
-            string(FIND ${setting} "2." pos)
-            if (${pos} GREATER -1)
-                set(PIO_VERSION 2)
-            else ()
-                set(PIO_VERSION 1)
-            endif ()
-            break()
-        endif ()
-    endforeach ()
-    if (${PIO_VERSION} EQUAL 1)
-        target_compile_definitions(core_atmosphere PRIVATE USE_PIO1)
-    else ()
-        target_compile_definitions(core_atmosphere PRIVATE USE_PIO2)
-    endif ()
-    target_compile_definitions(core_atmosphere PRIVATE MPAS_PIO_SUPPORT)
-endif ()
-target_compile_definitions(core_atmosphere PRIVATE mpas=1)
-target_compile_definitions(framework PRIVATE MPAS_NATIVE_TIMERS)
-mpas_core_target(CORE atmosphere TARGET core_atmosphere INCLUDES ${atm_core_inc})
+target_compile_definitions(core_atmosphere PRIVATE ${CORE_ATMOSPHERE_COMPILE_DEFINITIONS})
+set_MPAS_DEBUG_flag(core_atmosphere)
+mpas_core_target(CORE atmosphere TARGET core_atmosphere INCLUDES ${ATMOSPHERE_CORE_INCLUDES})
 
 #Get physics_wrf tables from MPAS-Data
 include(FetchContent)
 if (${PROJECT_VERSION} VERSION_GREATER_EQUAL 7.0)
-    set(MPAS_DATA_GIT_TAG v${PROJECT_VERSION})
+    set(MPAS_DATA_GIT_TAG v${PROJECT_VERSION_MAJOR}.0)
 else ()
     set(MPAS_DATA_GIT_TAG master)
 endif ()
@@ -210,16 +184,16 @@ FetchContent_Declare(mpas_data
         GIT_SHALLOW True)
 FetchContent_Populate(mpas_data)
 message(STATUS "MPAS-Data source dir: ${mpas_data_SOURCE_DIR}")
-set(_physics_wrf_datadir ${mpas_data_SOURCE_DIR}/atmosphere/physics_wrf/files)
-file(GLOB _physics_wrf_data RELATIVE ${_physics_wrf_datadir} "${_physics_wrf_datadir}/*")
+set(PHYSICS_WRF_DATA_DIR ${mpas_data_SOURCE_DIR}/atmosphere/physics_wrf/files)
+file(GLOB PHYSICS_WRF_DATA RELATIVE ${PHYSICS_WRF_DATA_DIR} "${PHYSICS_WRF_DATA_DIR}/*")
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME}/core_atmosphere)
-foreach (_datafile IN LISTS _physics_wrf_data)
-    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${_physics_wrf_datadir}/${_datafile}
-            ${CMAKE_BINARY_DIR}/${PROJECT_NAME}/core_atmosphere/${_datafile})
+foreach (data_file IN LISTS PHYSICS_WRF_DATA)
+    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${PHYSICS_WRF_DATA_DIR}/${data_file}
+            ${CMAKE_BINARY_DIR}/${PROJECT_NAME}/core_atmosphere/${data_file})
 endforeach ()
-install(DIRECTORY ${_physics_wrf_datadir}/ DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/core_atmosphere)
+install(DIRECTORY ${PHYSICS_WRF_DATA_DIR}/ DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/core_atmosphere)
 
-add_executable(mpas_atmosphere_build_tables ${_atm_core_utils_srcs})
+add_executable(mpas_atmosphere_build_tables ${ATMOSPHERE_CORE_UTILS_SOURCES})
 target_link_libraries(mpas_atmosphere_build_tables PUBLIC core_atmosphere)
 mpas_fortran_target(mpas_atmosphere_build_tables)
 install(TARGETS mpas_atmosphere_build_tables EXPORT ${PROJECT_NAME}ExportsCore

@@ -1,5 +1,5 @@
 
-set(_mpas_framework_src
+set(MPAS_FRAMEWORK_SOURCES
         mpas_block_creator.F
         mpas_block_decomp.F
         mpas_bootstrapping.F
@@ -36,57 +36,34 @@ set(_mpas_framework_src
         xml_stream_parser.c
         stream_inquiry.c)
 
-add_library(framework ${_mpas_framework_src})
-if (${DO_PHYSICS})
-    target_compile_definitions(framework PRIVATE DO_PHYSICS)
-endif ()
-if (MPAS_DOUBLE_PRECISION)
-    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fdefault-real-8 -fdefault-double-8")
-else ()
-    target_compile_definitions(framework PRIVATE SINGLE_PRECISION)
-endif ()
-if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
-    target_compile_definitions(framework PRIVATE MPAS_DEBUG)
-endif ()
-if (${PIO_FOUND})
-    FILE(STRINGS ${PIO_PREFIX}/lib/libpio.settings PIO_SETTINGS)
-    foreach (setting ${PIO_SETTINGS})
-        string(FIND ${setting} "PIO Version" found)
-        if (${found} GREATER -1)
-            string(FIND ${setting} "2." pos)
-            if (${pos} GREATER -1)
-                set(PIO_VERSION 2)
-            else ()
-                set(PIO_VERSION 1)
-            endif ()
-            break()
-        endif ()
-    endforeach ()
-    if (${PIO_VERSION} EQUAL 1)
-        target_compile_definitions(framework PRIVATE USE_PIO1)
-    else ()
-        target_compile_definitions(framework PRIVATE USE_PIO2)
-    endif ()
-    target_compile_definitions(framework PRIVATE MPAS_PIO_SUPPORT)
-endif ()
-target_compile_definitions(framework PRIVATE mpas=1)
-target_compile_definitions(framework PRIVATE MPAS_NATIVE_TIMERS)
+add_library(framework ${MPAS_FRAMEWORK_SOURCES})
+set_MPAS_DEBUG_flag(framework)
+set(FRAMEWORK_COMPILE_DEFINITIONS
+        USE_PIO2
+        MPAS_PIO_SUPPORT
+        mpas=1
+        MPAS_NATIVE_TIMERS)
+target_compile_definitions(framework PRIVATE ${FRAMEWORK_COMPILE_DEFINITIONS})
 
 mpas_fortran_target(framework)
 add_library(${PROJECT_NAME}::framework ALIAS framework)
 
 set_target_properties(framework PROPERTIES OUTPUT_NAME mpas_framework)
 
-target_link_libraries(framework PUBLIC ${PROJECT_NAME}::external::esmf)
-target_link_libraries(framework PUBLIC ${PROJECT_NAME}::external::ezxml)
-target_link_libraries(framework PUBLIC PIO::PIO_Fortran PIO::PIO_C)
-target_link_libraries(framework PUBLIC PnetCDF::PnetCDF_Fortran)
-target_link_libraries(framework PUBLIC NetCDF::NetCDF_Fortran NetCDF::NetCDF_C)
-target_link_libraries(framework PUBLIC MPI::MPI_Fortran)
+set(FRAMEWORK_LINK_LIBRARIES
+        ${PROJECT_NAME}::external::esmf
+        ${PROJECT_NAME}::external::ezxml
+        PIO::PIO_Fortran
+        PIO::PIO_C
+        PnetCDF::PnetCDF_Fortran
+        NetCDF::NetCDF_Fortran
+        NetCDF::NetCDF_C
+        MPI::MPI_Fortran)
 
 if (MPAS_PROFILE)
-    target_link_libraries(framework PUBLIC GPTL::GPTL)
+    list(APPEND FRAMEWORK_LINK_LIBRARIES GPTL::GPTL)
 endif ()
+target_link_libraries(framework PUBLIC ${FRAMEWORK_LINK_LIBRARIES})
 
 install(TARGETS framework EXPORT ${PROJECT_NAME}Exports
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
