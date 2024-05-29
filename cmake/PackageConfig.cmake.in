@@ -19,6 +19,8 @@
 #
 # Output variables set:
 #  * @PROJECT_NAME@_VERSION - Version of install package
+#  * @PROJECT_NAME@_VERSION_MAJOR - Major version of install package
+#  * @PROJECT_NAME@_VERSION_MINOR - Minor version of install package
 #  * @PROJECT_NAME@_MODULES_Fortran_COMPILER_ID - Compiler used to generate Fortran Modules
 #  * @PROJECT_NAME@_MODULES_Fortran_COMPILER_VERSION - Compiler version used to generate Fortran Modules
 #  * @PROJECT_NAME@_CORE_<CORE>_DATADIR - Location for data files for core (namelist, streams, data tables, etc.)
@@ -44,6 +46,8 @@ if(NOT TARGET @PROJECT_NAME@::framework)
 endif()
 
 set(@PROJECT_NAME@_VERSION @PROJECT_VERSION@)
+set(@PROJECT_NAME@_VERSION_MAJOR @PROJECT_VERSION_MAJOR@)
+set(@PROJECT_NAME@_VERSION_MINOR @PROJECT_VERSION_MINOR@)
 
 #Export Fortran compiler version and check module compatibility
 set(@PROJECT_NAME@_MODULES_Fortran_COMPILER_ID @CMAKE_Fortran_COMPILER_ID@)
