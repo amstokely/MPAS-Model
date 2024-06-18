@@ -353,6 +353,7 @@ module mpas_atm_halos
       type (domain_type), intent(inout) :: domain
       integer, intent(inout) :: ierr
 
+      call mpas_pool_get_config(domain % blocklist % configs, 'config_halo_exch_method', config_halo_exch_method)
 
       if (trim(config_halo_exch_method) == 'mpas_dmpar') then
          !
