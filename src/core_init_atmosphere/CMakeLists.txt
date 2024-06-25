@@ -34,6 +34,7 @@ set(init_atm_core_srcs
         mpas_init_atm_read_met.F
         mpas_init_atm_static.F
         mpas_init_atm_surface.F
+        mpas_init_atm_thompson_aerosols.F
         mpas_init_atm_vinterp.F
         mpas_kd_tree.F
         mpas_parse_geoindex.F

@@ -98,7 +98,6 @@ include 'mpif.h'
    public :: mpas_dmpar_bcast_ints
    public :: mpas_dmpar_bcast_real
    public :: mpas_dmpar_bcast_reals
-   public :: mpas_dmpar_bcast_real4s
    public :: mpas_dmpar_bcast_double
    public :: mpas_dmpar_bcast_doubles
    public :: mpas_dmpar_bcast_logical
@@ -551,6 +550,7 @@ include 'mpif.h'
 #endif
 
    end subroutine mpas_dmpar_bcast_reals!}}}
+
 
 !-----------------------------------------------------------------------
 !  routine mpas_dmpar_bcast_real4s
