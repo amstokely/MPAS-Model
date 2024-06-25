@@ -129,7 +129,6 @@ set(ATMOSPHERE_CORE_PHYSICS_NOAMP_MPAS_DRIVER_SOURCES
     BiochemVarOutTransferMod.F90
     EnergyVarInTransferMod.F90
     ForcingVarOutTransferMod.F90
-    NoahmpGroundwaterInitMod.F90
     NoahmpIOVarInitMod.F90
     NoahmpReadTableMod.F90
     WaterVarInTransferMod.F90
