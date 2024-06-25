@@ -37,6 +37,9 @@ set(ATMOSPHERE_CORE_PHYSICS_SOURCES
     mpas_atmphys_packages.F
     mpas_atmphys_todynamics.F
     mpas_atmphys_vars.F
+    mpas_atmphys_driver_lsm_noahmp.F
+    mpas_atmphys_lsm_noahmpfinalize.F
+    mpas_atmphys_lsm_noahmpinit.F
 )
 list(TRANSFORM ATMOSPHERE_CORE_PHYSICS_SOURCES PREPEND physics/)
 
@@ -44,6 +47,8 @@ list(TRANSFORM ATMOSPHERE_CORE_PHYSICS_SOURCES PREPEND physics/)
 # physics/physics_wrf/
 set(ATMOSPHERE_CORE_PHYSICS_WRF_SOURCES
     libmassv.F
+    cu_ntiedtke_post.F
+    cu_ntiedtke_pre.F
     module_bep_bem_helper.F
     module_bl_gwdo.F
     module_bl_ysu.F
@@ -55,7 +60,9 @@ set(ATMOSPHERE_CORE_PHYSICS_WRF_SOURCES
     module_mp_radar.F
     module_mp_thompson.F
     module_mp_thompson_cldfra3.F
+    module_mp_thompson_aerosols.F
     module_mp_wsm6.F
+    module_ra_rrtmg_sw_aerosols
     module_ra_cam_support.F
     module_ra_rrtmg_lw.F
     module_ra_rrtmg_sw.F
@@ -82,6 +89,7 @@ set(ATMOSPHERE_CORE_PHYSICS_WRF_SOURCES
     module_ra_cam.F
     module_sf_mynn.F
     sf_mynn_pre.F
+    sf_sfclayrev_pre.F
 )
 
 list(TRANSFORM ATMOSPHERE_CORE_PHYSICS_WRF_SOURCES PREPEND physics/physics_wrf/)
