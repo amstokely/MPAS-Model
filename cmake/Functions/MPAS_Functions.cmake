@@ -163,14 +163,16 @@ function(mpas_core_target)
 
     #Process registry and generate includes, namelists, and streams
     if(${ARG_CORE} STREQUAL "atmosphere" AND ${DO_PHYSICS})
-            set(CPP_EXTRA_FLAGS ${CPP_EXTRA_FLAGS} -DDO_PHYSICS)
+            set(CPP_EXTRA_FLAGS ${CPP_EXTRA_FLAGS} -DDO_PHYSICS -DCORE_ATMOSPHERE -DMPAS_NAMELIST_SUFFIX=atmosphere -DMPAS_EXE_NAME=mpas_atmosphere -DMPAS_GIT_VERSION=v8.1.0-124-g707029499 -DMPAS_BUILD_TARGET=gnu)
     endif()
-    add_custom_command(OUTPUT Registry_processed.xml
+    message("CPP_EXTRA_FLAGS = " ${CPP_EXTRA_FLAGS})
+
+add_custom_command(OUTPUT Registry_processed.xml
             COMMAND ${CPP_EXECUTABLE} -E -P ${CPP_EXTRA_FLAGS} ${CMAKE_CURRENT_SOURCE_DIR}/Registry.xml > Registry_processed.xml
             COMMENT "CORE ${ARG_CORE}: Pre-Process Registry"
             DEPENDS Registry.xml)
     add_custom_command(OUTPUT ${ARG_INCLUDES}
-            COMMAND mpas_parse_${ARG_CORE} Registry_processed.xml
+            COMMAND mpas_parse_${ARG_CORE} Registry_processed.xml ${CPP_EXTRA_FLAGS}
             COMMENT "CORE ${ARG_CORE}: Parse Registry"
             DEPENDS mpas_parse_${ARG_CORE} Registry_processed.xml)
     add_custom_command(OUTPUT namelist.${ARG_CORE}
