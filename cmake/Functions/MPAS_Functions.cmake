@@ -30,6 +30,33 @@ function(get_mpas_version mpas_version)
 endfunction()
 
 ##
+# get_git_version( <git_version> )
+# Extracts the current Git version of the project.
+# <git_version> will contain the Git version string.
+# Example usage:
+# get_git_version(GIT_VERSION)
+# message("Git Version: ${GIT_VERSION}")
+##
+
+
+function(get_git_version git_version)
+    execute_process(
+            COMMAND git describe --tags --always
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            RESULT_VARIABLE RESULT
+            OUTPUT_VARIABLE GIT_VERSION
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    if(NOT RESULT EQUAL 0)
+        message(WARNING "Failed to get Git version!")
+    endif()
+    set(${git_version} ${GIT_VERSION} PARENT_SCOPE
+    )
+endfunction()
+
+
+##
 # mpas_fortran_target( <target-name> )
 #
 # Fortran configuration and options common to all MPAS Fortran targets
@@ -162,10 +189,13 @@ function(mpas_core_target)
     file(MAKE_DIRECTORY ${CORE_DATADIR})
 
     #Process registry and generate includes, namelists, and streams
-    if(${ARG_CORE} STREQUAL "atmosphere" AND ${DO_PHYSICS})
-            set(CPP_EXTRA_FLAGS ${CPP_EXTRA_FLAGS} -DDO_PHYSICS -DCORE_ATMOSPHERE -DMPAS_NAMELIST_SUFFIX=atmosphere -DMPAS_EXE_NAME=mpas_atmosphere -DMPAS_GIT_VERSION=v8.1.0-124-g707029499 -DMPAS_BUILD_TARGET=gnu)
+    get_git_version(git_version)
+    string(TOUPPER ${ARG_CORE} ARG_CORE_UPPER)
+    set(CPP_EXTRA_FLAGS ${CPP_EXTRA_FLAGS} -DCORE_${ARG_CORE_UPPER} -DMPAS_NAMELIST_SUFFIX=${ARG_CORE} -DMPAS_EXE_NAME=mpas_${ARG_CORE} -DMPAS_GIT_VERSION=${git_version} -DMPAS_BUILD_TARGET=${CMAKE_Fortran_COMPILER_ID})
+    message("CPP_EXTRA_FLAGS: ${CPP_EXTRA_FLAGS}")
+    if (${DO_PHYSICS})
+        set(CPP_EXTRA_FLAGS ${CPP_EXTRA_FLAGS} -DDO_PHYSICS)
     endif()
-    message("CPP_EXTRA_FLAGS = " ${CPP_EXTRA_FLAGS})
 
 add_custom_command(OUTPUT Registry_processed.xml
             COMMAND ${CPP_EXECUTABLE} -E -P ${CPP_EXTRA_FLAGS} ${CMAKE_CURRENT_SOURCE_DIR}/Registry.xml > Registry_processed.xml

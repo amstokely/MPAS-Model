@@ -94,6 +94,23 @@ set(ATMOSPHERE_CORE_PHYSICS_WRF_SOURCES
 
 list(TRANSFORM ATMOSPHERE_CORE_PHYSICS_WRF_SOURCES PREPEND physics/physics_wrf/)
 
+
+set(ATMOSPHERE_CORE_PHYSICS_MMM_DIR ${CMAKE_CURRENT_SOURCE_DIR}/physics/physics_mmm)
+
+if(NOT EXISTS ${ATMOSPHERE_CORE_PHYSICS_MMM_DIR})
+    set(PHYSICS_MMM_REPO_URL "https://github.com/NCAR/MMM-physics")
+    execute_process(COMMAND git clone ${PHYSICS_MMM_REPO_URL} ${ATMOSPHERE_CORE_PHYSICS_MMM_DIR}
+                    RESULT_VARIABLE GIT_CLONE_RESULT
+                    OUTPUT_VARIABLE GIT_CLONE_OUTPUT
+                    ERROR_VARIABLE GIT_CLONE_ERROR)
+    if(NOT GIT_CLONE_RESULT EQUAL 0)
+        message(FATAL_ERROR "Git clone failed with error: ${GIT_CLONE_ERROR}")
+    endif()
+
+else()
+    message(STATUS "Directory ${DIR_TO_CHECK} already exists, skipping clone")
+endif()
+
 set(ATMOSPHERE_CORE_PHYSICS_MMM_SOURCES
     bl_gwdo.F90
     bl_ysu.F90
