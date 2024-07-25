@@ -7,6 +7,9 @@
 !
 module mpas_io
 
+#define COMMA ,
+#define STREAM_DEBUG_WRITE(M) call mpas_log_write(M)
+
    use mpas_derived_types
    use mpas_attlist
    use mpas_dmpar
@@ -5338,28 +5341,29 @@ module mpas_io
       end if
 
 #ifdef MPAS_PIO_SUPPORT
-      if (handle % preexisting_file) then
-         pio_ierr = PIO_redef(handle % pio_file)
-         if (pio_ierr /= PIO_noerr) then
-            io_global_err = pio_ierr
-            return
-         end if
-      end if
+!      if (handle % preexisting_file) then
+!         pio_ierr = PIO_redef(handle % pio_file)
+!         if (pio_ierr /= PIO_noerr) then
+!            io_global_err = pio_ierr
+!            return
+!         end if
+!      end if
 
-      pio_ierr = PIO_put_att(handle % pio_file, varid, attName, attValueLocal) 
+      pio_ierr = pio_put_att_retry(handle, attName, intValue=attValueLocal)
+      !pio_ierr = PIO_put_att(handle % pio_file, varid, attName, attValueLocal) 
       if (pio_ierr /= PIO_noerr) then
          io_global_err = pio_ierr
          if (present(ierr)) ierr = MPAS_IO_ERR_BACKEND
          return
       end if
 
-      if (handle % preexisting_file) then
-         pio_ierr = PIO_enddef(handle % pio_file)
-         if (pio_ierr /= PIO_noerr) then
-            io_global_err = pio_ierr
-            return
-         end if
-      end if
+!      if (handle % preexisting_file) then
+!         pio_ierr = PIO_enddef(handle % pio_file)
+!         if (pio_ierr /= PIO_noerr) then
+!            io_global_err = pio_ierr
+!            return
+!         end if
+!      end if
 #endif
 
 #ifdef MPAS_SMIOL_SUPPORT
@@ -5553,6 +5557,105 @@ module mpas_io
 
    end subroutine MPAS_io_put_att_int1d
 
+   !-----------------------------------------------------------------------
+   !  routine pio_put_no_retry
+   !
+   !> \brief This is a wrapper utility to call PIO_put_att.
+   !> \details 
+   !>  This routine will take as input a handle to a file to write to,
+   !>  the name of the attribute to be written, and the attribute value.
+   !>  The value is one of integer, real (rkind), single precision (r4kind), or double (r8kind).
+   !>  One and only one value should be provided.
+   !-----------------------------------------------------------------------
+   function pio_put_no_retry(handle, attName, intValue, realValue, r4Value, r8Value)
+      type (MPAS_IO_Handle_type), intent(inout) :: handle
+      character (len=*), intent(in) :: attName
+      integer, intent(in), optional :: intValue
+      real (kind=RKIND), intent(in), optional :: realValue
+      real (kind=R4KIND), intent(in), optional :: r4Value
+      real (kind=R8KIND), intent(in), optional :: r8Value
+
+      integer pio_ierr
+
+      if (present(intValue)) then
+         pio_ierr = PIO_put_att(handle % pio_file, PIO_global, attName, intValue)
+      else if (present(realValue)) then
+         pio_ierr = PIO_put_att(handle % pio_file, PIO_global, attName, realValue)
+      else if (present(r4Value)) then
+         pio_ierr = PIO_put_att(handle % pio_file, PIO_global, attName, r4Value)
+      else if (present(r8Value)) then
+         pio_ierr = PIO_put_att(handle % pio_file, PIO_global, attName, r8Value)
+      else
+         call mpas_log_write('invalid call to pio_put_no_retry, a value must be provided')
+         ! FIXME perhaps return the pio_error in a parameter, and have the return value
+         ! simply indicate the failure type (pio error vs mpas error).
+         pio_error = -1
+      end if
+      pio_put_no_retry = pio_ierr
+   end function pio_put_no_retry
+
+   !-----------------------------------------------------------------------
+   !  routine pio_put_retry
+   !
+   !> \brief This is a utility to call PIO_put_att.
+   !> \details 
+   !>  This function will attempt to write an attribute. If the attemp returns an error code,
+   !>  The file will be put in define mode, the attribute will be written, and then the file
+   !>  will be taken out of define mode.
+   !>
+   !>  This routine will take as input a handle to a file to write to,
+   !>  the name of the attribute to be written, and the attribute value.
+   !>  The value is one of integer, real (rkind), single precision (r4kind), or double (r8kind).
+   !>  One and only one value should be provided.
+   !-----------------------------------------------------------------------
+   function pio_put_att_retry(handle, attName, intValue, realValue, r4Value, r8Value)
+      type (MPAS_IO_Handle_type), intent(inout) :: handle
+      character (len=*), intent(in) :: attName
+      integer, intent(in), optional :: intValue
+      real (kind=RKIND), intent(in), optional :: realValue
+      real (kind=R4KIND), intent(in), optional :: r4Value
+      real (kind=R8KIND), intent(in), optional :: r8Value
+
+      integer pio_ierr
+
+      STREAM_DEBUG_WRITE('pio_put_att_retry calling PIO_put_att attName:' // trim(attName))
+      pio_ierr = pio_put_no_retry(handle, attName, &
+               intValue=intValue, realValue=realValue, r4Value=r4Value, r8Value=r8Value)
+      if (pio_err == -1) then
+         pio_put_att_retry = pio_ierr
+         return
+      end if
+      STREAM_DEBUG_WRITE('pio_put_att_retry finished PIO_put_att pio_err=$i' COMMA intArgs=(/pio_ierr/))
+      if (pio_ierr /= PIO_noerr) then
+         if (handle % preexisting_file ) then
+            STREAM_DEBUG_WRITE('pio_put_att_retry calling PIO_redef')
+            pio_ierr = PIO_redef(handle % pio_file)
+            STREAM_DEBUG_WRITE('pio_put_att_retry finished PIO_redef pio_err=$i' COMMA intArgs=(/pio_ierr/))
+            if (pio_ierr /= PIO_noerr) then
+               pio_put_att_retry = pio_ierr
+               return
+            end if
+
+            STREAM_DEBUG_WRITE('pio_put_att_retry calling PIO_put_att')
+            pio_ierr = pio_put_no_retry(handle, attName, &
+               intValue=intValue, realValue=realValue, r4Value=r4Value, r8Value=r8Value)
+            STREAM_DEBUG_WRITE('pio_put_att_retry finished PIO_put_att pio_err=$i' COMMA intArgs=(/pio_ierr/))
+            if (pio_ierr /= PIO_noerr) then
+               pio_put_att_retry = pio_ierr
+               return
+            end if
+
+            STREAM_DEBUG_WRITE('pio_put_att_retry calling PIO_enddef')
+            pio_ierr = PIO_enddef(handle % pio_file)
+            STREAM_DEBUG_WRITE('pio_put_att_retry finished PIO_enddef pio_err=$i' COMMA intArgs=(/pio_ierr/))
+            if (pio_ierr /= PIO_noerr) then
+               pio_put_att_retry = pio_ierr
+               return
+            end if
+         end if
+      end if
+      pio_put_retry_single = pio_ierr
+   end function pio_put_att_retry
 
    subroutine MPAS_io_put_att_real0d(handle, attName, attValue, fieldname, syncVal, precision, ierr)
 
@@ -5702,20 +5805,21 @@ module mpas_io
       end if
 
 #ifdef MPAS_PIO_SUPPORT
-      if (handle % preexisting_file) then
-         pio_ierr = PIO_redef(handle % pio_file)
-         if (pio_ierr /= PIO_noerr) then
-            io_global_err = pio_ierr
-            return
-         end if
-      end if
+!      if (handle % preexisting_file) then
+!         pio_ierr = PIO_redef(handle % pio_file)
+!         if (pio_ierr /= PIO_noerr) then
+!            io_global_err = pio_ierr
+!            return
+!         end if
+!      end if
 #endif
 
       if ((new_attlist_node % attHandle % precision == MPAS_IO_SINGLE_PRECISION) .and. &
           (MPAS_IO_NATIVE_PRECISION /= MPAS_IO_SINGLE_PRECISION)) then
          singleVal = real(attValueLocal,R4KIND)
 #ifdef MPAS_PIO_SUPPORT
-         pio_ierr = PIO_put_att(handle % pio_file, varid, attName, singleVal) 
+         pio_ierr = pio_put_att_retry(handle, attName, r4Value=singleVal)
+         !pio_ierr = PIO_put_att(handle % pio_file, varid, attName, singleVal) 
 #endif
 
 #ifdef MPAS_SMIOL_SUPPORT
@@ -5729,7 +5833,8 @@ module mpas_io
           (MPAS_IO_NATIVE_PRECISION /= MPAS_IO_DOUBLE_PRECISION)) then
          doubleVal = real(attValueLocal,R8KIND)
 #ifdef MPAS_PIO_SUPPORT
-         pio_ierr = PIO_put_att(handle % pio_file, varid, attName, doubleVal) 
+         pio_ierr = pio_put_att_retry(handle, attName, r8Value=doubleVal)
+         !pio_ierr = PIO_put_att(handle % pio_file, varid, attName, doubleVal) 
 #endif
 
 #ifdef MPAS_SMIOL_SUPPORT
@@ -5741,7 +5846,8 @@ module mpas_io
 #endif
       else
 #ifdef MPAS_PIO_SUPPORT
-         pio_ierr = PIO_put_att(handle % pio_file, varid, attName, attValueLocal) 
+         pio_ierr = pio_put_att_retry(handle, attName, realValue=attValueLocal)
+         !pio_ierr = PIO_put_att(handle % pio_file, varid, attName, attValueLocal) 
 #endif
 
 #ifdef MPAS_SMIOL_SUPPORT
@@ -5760,13 +5866,13 @@ module mpas_io
          return
       end if
 
-      if (handle % preexisting_file) then
-         pio_ierr = PIO_enddef(handle % pio_file)
-         if (pio_ierr /= PIO_noerr) then
-            io_global_err = pio_ierr
-            return
-         end if
-      end if
+!      if (handle % preexisting_file) then
+!         pio_ierr = PIO_enddef(handle % pio_file)
+!         if (pio_ierr /= PIO_noerr) then
+!            io_global_err = pio_ierr
+!            return
+!         end if
+!      end if
 #endif
 #ifdef MPAS_SMIOL_SUPPORT
       if (local_ierr /= SMIOL_SUCCESS) then
@@ -6096,7 +6202,7 @@ module mpas_io
          attlist_cursor => handle % attlist_head
          do while (associated(attlist_cursor))
             if (trim(attName) == trim(attlist_cursor % atthandle % attName)) then
-!call mpas_log_write('Attribute already defined')
+!call mpas_log_write(trim(attName)// ' Attribute already defined')
                if (attlist_cursor % atthandle % attType /= MPAS_ATT_TEXT .or. &
                    trim(attlist_cursor % atthandle % attValueText) /= trim(attValue)) then
                   if (present(ierr)) ierr = MPAS_IO_ERR_REDEF_ATT
@@ -6129,12 +6235,16 @@ module mpas_io
 
       if ( present(syncVal) ) then
          if ( syncVal ) then
+            STREAM_DEBUG_WRITE('calling mpas_dmpar_bcast_char  for ' // trim(attValueLocal))
             call mpas_dmpar_bcast_char(handle % iocontext % dminfo, attValueLocal, IO_NODE)
+            STREAM_DEBUG_WRITE('finished mpas_dmpar_bcast_char')
          end if
       end if
 
 #ifdef MPAS_PIO_SUPPORT
+      STREAM_DEBUG_WRITE('MPAS_io_put_att_text calling PIO_put_att')
       pio_ierr = PIO_put_att(handle % pio_file, varid, attName, trim(attValueLocal)) 
+      STREAM_DEBUG_WRITE('MPAS_io_put_att_text finished PIO_put_att pio_err=$i' COMMA intArgs=(/pio_ierr/))
       if (pio_ierr /= PIO_noerr) then
 
          io_global_err = pio_ierr
@@ -6147,19 +6257,25 @@ module mpas_io
          !      these operations can be very expensive in parallel systems.'
          !
          if (handle % preexisting_file .and. .not. handle % data_mode) then
+            STREAM_DEBUG_WRITE('MPAS_io_put_att_text calling PIO_redef')
             pio_ierr = PIO_redef(handle % pio_file)
+            STREAM_DEBUG_WRITE('MPAS_io_put_att_text finished PIO_redef pio_err=$i' COMMA intArgs=(/pio_ierr/))
             if (pio_ierr /= PIO_noerr) then
                io_global_err = pio_ierr
                return
             end if
 
+            STREAM_DEBUG_WRITE('MPAS_io_put_att_text calling PIO_put_att')
             pio_ierr = PIO_put_att(handle % pio_file, varid, attName, trim(attValueLocal)) 
+            STREAM_DEBUG_WRITE('MPAS_io_put_att_text finished PIO_put_att pio_err=$i' COMMA intArgs=(/pio_ierr/))
             if (pio_ierr /= PIO_noerr) then
                io_global_err = pio_ierr
                return
             end if
 
+            STREAM_DEBUG_WRITE('MPAS_io_put_att_text calling PIO_enddef')
             pio_ierr = PIO_enddef(handle % pio_file)
+            STREAM_DEBUG_WRITE('MPAS_io_put_att_text finished PIO_enddef pio_err=$i' COMMA intArgs=(/pio_ierr/))
             if (pio_ierr /= PIO_noerr) then
                io_global_err = pio_ierr
                return
