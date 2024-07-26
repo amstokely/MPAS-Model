@@ -6003,50 +6003,56 @@ module mpas_io
       
       select type(attValue)
          type is (integer)
+            call mpas_log_write('PIO_put_att called for integer attribute '//attName)
             pio_ierr = PIO_put_att(handle % pio_file, varid, attName, attValue)
          type is (real(kind=4))
+            call mpas_log_write('PIO_put_att called for real4 attribute '//attName)
             pio_ierr = PIO_put_att(handle % pio_file, varid, attName, attValue)
          type is (real(kind=8))
+            call mpas_log_write('PIO_put_att called for real8 attribute '//attName)
             pio_ierr = PIO_put_att(handle % pio_file, varid, attName, attValue)
          type is (character(len=*))
+            call mpas_log_write('PIO_put_att called for text attribute '//attName)
             pio_ierr = PIO_put_att(handle % pio_file, varid, attName, attValue)
       end select
-      if (pio_ierr /= PIO_noerr) then
-
-         io_global_err = pio_ierr
-         if (present(ierr)) ierr = MPAS_IO_ERR_BACKEND
-
-         if (handle % preexisting_file .and. .not. handle % data_mode) then
-            pio_ierr = PIO_redef(handle % pio_file)
-            if (pio_ierr /= PIO_noerr) then
-               io_global_err = pio_ierr
-               return
-            end if
-            select type(attValue)
-               type is (integer)
-                  pio_ierr = PIO_put_att(handle % pio_file, varid, attName, attValue)
-               type is (real(kind=4))
-                  pio_ierr = PIO_put_att(handle % pio_file, varid, attName, attValue)
-               type is (real(kind=8))
-                  pio_ierr = PIO_put_att(handle % pio_file, varid, attName, attValue)
-               type is (character(len=*))
-                  pio_ierr = PIO_put_att(handle % pio_file, varid, attName, attValue)
-            end select
-            if (pio_ierr /= PIO_noerr) then
-               io_global_err = pio_ierr
-               return
-            end if
-
-            pio_ierr = PIO_enddef(handle % pio_file)
-            if (pio_ierr /= PIO_noerr) then
-               io_global_err = pio_ierr
-               return
-            end if
-
-            if (present(ierr)) ierr = MPAS_IO_NOERR
-         end if
-         return
-      end if
+!      if (pio_ierr /= PIO_noerr) then
+!
+!         io_global_err = pio_ierr
+!         if (present(ierr)) ierr = MPAS_IO_ERR_BACKEND
+!
+!         if (handle % preexisting_file .and. .not. handle % data_mode) then
+!            pio_ierr = PIO_redef(handle % pio_file)
+!             call mpas_log_write('Entered DEFINE MODE: '//attName)
+!           if (pio_ierr /= PIO_noerr) then
+!               io_global_err = pio_ierr
+!               return
+!            end if
+!            select type(attValue)
+!               type is (integer)
+!                  pio_ierr = PIO_put_att(handle % pio_file, varid, attName, attValue)
+!               type is (real(kind=4))
+!                  pio_ierr = PIO_put_att(handle % pio_file, varid, attName, attValue)
+!               type is (real(kind=8))
+!                  pio_ierr = PIO_put_att(handle % pio_file, varid, attName, attValue)
+!               type is (character(len=*))
+!                  pio_ierr = PIO_put_att(handle % pio_file, varid, attName, attValue)
+!            end select
+!            if (pio_ierr /= PIO_noerr) then
+!               io_global_err = pio_ierr
+!               return
+!            end if
+!
+!            pio_ierr = PIO_enddef(handle % pio_file)
+!            call mpas_log_write('Exited DEFINE MODE: '//attName)
+!            if (pio_ierr /= PIO_noerr) then
+!               io_global_err = pio_ierr
+!               return
+!            end if
+!
+!            if (present(ierr)) ierr = MPAS_IO_NOERR
+!         end if
+!         return
+!      end if
    end subroutine
 
 
