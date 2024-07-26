@@ -4237,7 +4237,7 @@ module mpas_io_streams
          return
       end if
 
-      call MPAS_io_put_att(stream % fileHandle, attName, attValue, syncVal=syncVal, ierr=io_err) 
+      call MPAS_io_put_att(stream % fileHandle, attName, attValue, syncVal=syncVal, ierr=io_err)
       call MPAS_io_err_mesg(stream % fileHandle % ioContext, io_err, .false.)
       if (io_err /= MPAS_IO_NOERR .and. present(ierr)) ierr = MPAS_IO_ERR
 
