@@ -5567,7 +5567,10 @@ module mpas_io
    !>  The value is one of integer, real (rkind), single precision (r4kind), or double (r8kind).
    !>  One and only one value should be provided.
    !-----------------------------------------------------------------------
-   function pio_put_no_retry(handle, attName, intValue, realValue, r4Value, r8Value)
+   integer function pio_put_no_retry(handle, attName, intValue, realValue, r4Value, r8Value)
+
+      implicit none
+
       type (MPAS_IO_Handle_type), intent(inout) :: handle
       character (len=*), intent(in) :: attName
       integer, intent(in), optional :: intValue
@@ -5589,7 +5592,7 @@ module mpas_io
          call mpas_log_write('invalid call to pio_put_no_retry, a value must be provided')
          ! FIXME perhaps return the pio_error in a parameter, and have the return value
          ! simply indicate the failure type (pio error vs mpas error).
-         pio_error = -1
+         pio_ierr = -1
       end if
       pio_put_no_retry = pio_ierr
    end function pio_put_no_retry
@@ -5608,7 +5611,10 @@ module mpas_io
    !>  The value is one of integer, real (rkind), single precision (r4kind), or double (r8kind).
    !>  One and only one value should be provided.
    !-----------------------------------------------------------------------
-   function pio_put_att_retry(handle, attName, intValue, realValue, r4Value, r8Value)
+   integer function pio_put_att_retry(handle, attName, intValue, realValue, r4Value, r8Value)
+
+      implicit none
+
       type (MPAS_IO_Handle_type), intent(inout) :: handle
       character (len=*), intent(in) :: attName
       integer, intent(in), optional :: intValue
@@ -5621,7 +5627,7 @@ module mpas_io
       STREAM_DEBUG_WRITE('pio_put_att_retry calling PIO_put_att attName:' // trim(attName))
       pio_ierr = pio_put_no_retry(handle, attName, &
                intValue=intValue, realValue=realValue, r4Value=r4Value, r8Value=r8Value)
-      if (pio_err == -1) then
+      if (pio_ierr == -1) then
          pio_put_att_retry = pio_ierr
          return
       end if
@@ -5654,7 +5660,7 @@ module mpas_io
             end if
          end if
       end if
-      pio_put_retry_single = pio_ierr
+      pio_put_att_retry = pio_ierr
    end function pio_put_att_retry
 
    subroutine MPAS_io_put_att_real0d(handle, attName, attValue, fieldname, syncVal, precision, ierr)
