@@ -4236,9 +4236,8 @@ module mpas_io_streams
          if (present(ierr)) ierr = MPAS_STREAM_NOT_INITIALIZED
          return
       end if
-      STREAM_DEBUG_WRITE(' -- MPAS_writeStreamAtt_text  calling MPAS_io_put_att attName: ' // trim(attName) // ' value: ' // trim(attValue))
-      call MPAS_io_put_att(stream % fileHandle, attName, attValue, syncVal=syncVal, ierr=io_err) 
-      STREAM_DEBUG_WRITE(' -- MPAS_writeStreamAtt_text finished MPAS_io_put_att')
+
+      call MPAS_io_put_att(stream % fileHandle, attName, attValue, syncVal=syncVal, ierr=io_err)
       call MPAS_io_err_mesg(stream % fileHandle % ioContext, io_err, .false.)
       if (io_err /= MPAS_IO_NOERR .and. present(ierr)) ierr = MPAS_IO_ERR
 

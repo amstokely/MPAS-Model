@@ -1571,7 +1571,6 @@ module mpas_stream_manager
 
         threadNum = mpas_threading_get_thread_num()
         
-        STREAM_DEBUG_WRITE('-- Called MPAS_stream_mgr_ringing_alarms()')
 
         MPAS_stream_mgr_ringing_alarms = .false.
 
@@ -1749,7 +1748,6 @@ module mpas_stream_manager
 
         threadNum = mpas_threading_get_thread_num()
 
-        STREAM_DEBUG_WRITE('-- Called MPAS_stream_mgr_set_property()')
 
         if (present(ierr)) ierr = MPAS_STREAM_MGR_NOERR
 
@@ -1824,7 +1822,6 @@ module mpas_stream_manager
 
         threadNum = mpas_threading_get_thread_num()
 
-        STREAM_DEBUG_WRITE('-- Called MPAS_stream_mgr_set_property()')
 
         if (present(ierr)) ierr = MPAS_STREAM_MGR_NOERR
 
@@ -1909,7 +1906,6 @@ module mpas_stream_manager
 
         threadNum = mpas_threading_get_thread_num()
 
-        STREAM_DEBUG_WRITE('-- Called MPAS_stream_mgr_set_property()')
 
         if (present(ierr)) ierr = MPAS_STREAM_MGR_NOERR
 
@@ -1980,7 +1976,6 @@ module mpas_stream_manager
         type (MPAS_stream_list_type), pointer :: stream_cursor
         integer :: err_local
 
-        STREAM_DEBUG_WRITE('-- Called MPAS_stream_mgr_get_property()')
 
         if (present(ierr)) ierr = MPAS_STREAM_MGR_NOERR
 
@@ -2047,7 +2042,6 @@ module mpas_stream_manager
         integer :: nAlarms
         integer :: err_local
 
-        STREAM_DEBUG_WRITE('-- Called MPAS_stream_mgr_get_property()')
 
         if (present(ierr)) ierr = MPAS_STREAM_MGR_NOERR
 
@@ -2154,7 +2148,6 @@ module mpas_stream_manager
         type (MPAS_stream_list_type), pointer :: stream_cursor
         integer :: err_local
 
-        STREAM_DEBUG_WRITE('-- Called MPAS_stream_mgr_get_property_logical()')
 
         if (present(ierr)) ierr = MPAS_STREAM_MGR_NOERR
 
@@ -2216,7 +2209,6 @@ module mpas_stream_manager
         logical :: addedPackages
 
 
-        STREAM_DEBUG_WRITE('-- Called MPAS_stream_mgr_add_pkg()')
 
         if (present(ierr)) ierr = MPAS_STREAM_MGR_NOERR
 
@@ -2285,7 +2277,6 @@ module mpas_stream_manager
         logical :: removedPackage
 
 
-        STREAM_DEBUG_WRITE('-- Called MPAS_stream_mgr_remove_pkg()')
 
         if (present(ierr)) ierr = MPAS_STREAM_MGR_NOERR
 
@@ -2348,7 +2339,6 @@ module mpas_stream_manager
         logical :: addedAttribute
 
 
-        STREAM_DEBUG_WRITE('-- Called MPAS_stream_mgr_add_att()')
 
         if (present(ierr)) ierr = MPAS_STREAM_MGR_NOERR
         nullify(queryVal)
@@ -2445,7 +2435,6 @@ module mpas_stream_manager
         logical :: addedAttribute
 
 
-        STREAM_DEBUG_WRITE('-- Called MPAS_stream_mgr_add_att()')
 
         if (present(ierr)) ierr = MPAS_STREAM_MGR_NOERR
         nullify(queryVal)
@@ -2546,7 +2535,6 @@ module mpas_stream_manager
         logical :: addedAttribute
 
 
-        STREAM_DEBUG_WRITE('-- Called MPAS_stream_mgr_add_att()')
 
         if (present(ierr)) ierr = MPAS_STREAM_MGR_NOERR
         nullify(queryVal)
@@ -2646,7 +2634,6 @@ module mpas_stream_manager
         logical :: addedAttribute
 
 
-        STREAM_DEBUG_WRITE('-- Called MPAS_stream_mgr_add_att()')
 
         if (present(ierr)) ierr = MPAS_STREAM_MGR_NOERR
         nullify(queryVal)
@@ -2761,7 +2748,6 @@ module mpas_stream_manager
 
         threadNum = mpas_threading_get_thread_num()
 
-        STREAM_DEBUG_WRITE('-- Called MPAS_stream_mgr_write()')
         local_ierr = MPAS_STREAM_MGR_NOERR
 
         if (present(ierr)) ierr = MPAS_STREAM_MGR_NOERR
@@ -2806,7 +2792,7 @@ module mpas_stream_manager
                wroteStreams = .false.
                nullify(stream_cursor)
                do while (MPAS_stream_list_query(manager % streams, streamID, stream_cursor, ierr=ierr))
-                   STREAM_DEBUG_WRITE('-- Handling write of streamID:'//trim(streamID)//' stream '//trim(stream_cursor % name))
+                   STREAM_DEBUG_WRITE('-- Handling write of stream '//trim(stream_cursor % name))
 
                    ! Verify that the stream is an output stream
                    if (stream_cursor % direction == MPAS_STREAM_OUTPUT .or. &
@@ -2814,9 +2800,7 @@ module mpas_stream_manager
 
                       wroteStreams = .true.
                       stream_cursor % blockWrite = .false.
-                      STREAM_DEBUG_WRITE('-- calling write_stream')
                       call write_stream(manager, stream_cursor, blockID, local_timeLevel, local_mgLevel, local_forceWrite, local_writeTime, local_ierr)
-                      STREAM_DEBUG_WRITE('-- write_stream finished')
                    end if
                end do
 
@@ -2836,9 +2820,7 @@ module mpas_stream_manager
                        stream_cursor % direction == MPAS_STREAM_INPUT_OUTPUT) then
 
                        stream_cursor % blockWrite = .false.
-                       STREAM_DEBUG_WRITE('-- calling write_stream')
                        call write_stream(manager, stream_cursor, blockID, local_timeLevel, local_mgLevel, local_forceWrite, local_writeTime, temp_ierr)
-                       STREAM_DEBUG_WRITE('-- write_stream finished')
                        if (temp_ierr /= MPAS_STREAM_MGR_NOERR) then
                            local_ierr = temp_ierr
                        end if
@@ -2850,7 +2832,6 @@ module mpas_stream_manager
         end if
 
         if (present(ierr)) ierr = local_ierr
-        STREAM_DEBUG_WRITE('-- Ended MPAS_stream_mgr_write()')
 
     end subroutine MPAS_stream_mgr_write !}}}
 
@@ -2925,7 +2906,6 @@ module mpas_stream_manager
 
         threadNum = mpas_threading_get_thread_num()
 
-        STREAM_DEBUG_WRITE('-- Called MPAS_stream_mgr_block_write()')
         local_ierr = MPAS_STREAM_MGR_NOERR
 
         if (present(ierr)) ierr = MPAS_STREAM_MGR_NOERR
@@ -3162,7 +3142,6 @@ module mpas_stream_manager
            ! stream, in which case we create the stream from scratch
            !
            if (.not. stream % valid) then
-               STREAM_DEBUG_WRITE(' -- stream is not valid')
                if ( stream % filename_interval /= 'none' ) then
                    call mpas_set_timeInterval(filename_interval, timeString=stream % filename_interval)
                    call mpas_build_stream_filename(stream % referenceTime, writeTime, filename_interval, stream % filename_template, blockID, stream % filename, ierr=local_ierr)
@@ -3229,9 +3208,7 @@ module mpas_stream_manager
                    end if
                end if
 
-               STREAM_DEBUG_WRITE(' -- calling build_stream '//trim(stream%stream%filename))
                call build_stream(stream, MPAS_STREAM_OUTPUT, manager % allFields, manager % allPackages, timeLevel, mgLevel, local_ierr)
-               STREAM_DEBUG_WRITE(' -- build_stream finished')
                if (local_ierr /= MPAS_STREAM_NOERR) then
                    ierr = MPAS_STREAM_MGR_ERROR
                    return
@@ -3357,9 +3334,7 @@ module mpas_stream_manager
 
            if (timeLevel /= stream % timeLevel) then
 
-               STREAM_DEBUG_WRITE(' -- calling update_stream')
                call update_stream(stream, manager % allFields, timeLevel, mgLevel, local_ierr)
-               STREAM_DEBUG_WRITE(' -- update_stream finished')
                if (local_ierr /= MPAS_STREAM_NOERR) then
                    ierr = MPAS_STREAM_MGR_ERROR
                    return
@@ -3477,7 +3452,6 @@ module mpas_stream_manager
 
         threadNum = mpas_threading_get_thread_num()
 
-        STREAM_DEBUG_WRITE('-- Called MPAS_stream_mgr_read()')
 
         if (present(ierr)) ierr = MPAS_STREAM_MGR_NOERR
         if (present(actualWhen)) write(actualWhen,'(a)') '0000-01-01_00:00:00'
@@ -4257,11 +4231,9 @@ module mpas_stream_manager
             !
             ! Write attributes to stream
             !
-            STREAM_DEBUG_WRITE(' -- build_stream mpas_pool_begin_iteration att_pool')
             call mpas_pool_begin_iteration(stream % att_pool)
             do while (mpas_pool_get_next_member(stream % att_pool, itr))
                 if ( itr % memberType == MPAS_POOL_CONFIG) then
-                    STREAM_DEBUG_WRITE(' -- build_stream mpas_writeStreamAtt ' //trim(itr % memberName)//' type $i' COMMA intArgs=(/itr % dataType/))
                     if ( itr % dataType == MPAS_POOL_REAL ) then
                         call mpas_pool_get_config(stream % att_pool, itr % memberName, realAtt)
                         call mpas_writeStreamAtt(stream % stream, itr % memberName, realAtt, syncVal=.false., ierr=local_ierr)
@@ -4293,9 +4265,7 @@ module mpas_stream_manager
             !
             call gen_random(idLength, c_file_id)
             call mpas_c_to_f_string(c_file_id, f_file_id)
-            STREAM_DEBUG_WRITE(' -- build_stream mpas_writeStreamAtt')
             call mpas_writeStreamAtt(stream % stream, 'file_id', f_file_id, syncVal=.true., ierr=local_ierr)
-            STREAM_DEBUG_WRITE(' -- build_stream finished mpas_writeStreamAtt')
             if (local_ierr /= MPAS_STREAM_NOERR) then
                 ierr = MPAS_STREAM_MGR_ERROR
                 return
@@ -4308,7 +4278,6 @@ module mpas_stream_manager
 
         call mpas_pool_begin_iteration(stream % field_pool)
 
-        STREAM_DEBUG_WRITE(' -- build_stream mpas_pool_get_next_memberatt_pool')
         FIELD_LOOP: do while ( mpas_pool_get_next_member(stream % field_pool, itr) )
 
             if (itr % memberType == MPAS_POOL_CONFIG) then
@@ -4391,7 +4360,6 @@ module mpas_stream_manager
 
             end if
         end do FIELD_LOOP
-        STREAM_DEBUG_WRITE(' -- build_stream finished mpas_pool_get_next_memberatt_pool')
 
     end subroutine build_stream !}}}
 
